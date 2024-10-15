@@ -1,0 +1,1 @@
+The key can be obtained on <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI API keys</a> page.

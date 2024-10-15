@@ -1,0 +1,26 @@
+{
+    "option.bsChatGptApiKey.txt": {
+        "global_cache": false,
+        "version_id": 1000070,
+        "version_string": "1.0.0",
+        "hash": "fbd635ef0b00544e12444ef000005693"
+    },
+    "option_explain.bsChatGptApiKey.txt": {
+        "global_cache": false,
+        "version_id": 1000070,
+        "version_string": "1.0.0",
+        "hash": "423b0f731176aa7869847d18c34f5043"
+    },
+    "option_group.bsChatGptBots.txt": {
+        "global_cache": false,
+        "version_id": 1020170,
+        "version_string": "1.2.1",
+        "hash": "b73bb0aa988e7cf0ee5b19efab2ef6fc"
+    },
+    "option_group_description.bsChatGptBots.txt": {
+        "global_cache": false,
+        "version_id": 1000070,
+        "version_string": "1.0.0",
+        "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+}

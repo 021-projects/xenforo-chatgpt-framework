@@ -1,0 +1,15 @@
+{
+    "legacy_addon_id": "",
+    "title": "[021] ChatGPT Framework",
+    "description": "Framework for ChatGPT API.",
+    "version_id": 1060070,
+    "version_string": "1.6.0",
+    "dev": "021",
+    "dev_url": "https://devsell.io/",
+    "faq_url": "",
+    "support_url": "https://devsell.io/threads/021-chatgpt-bots.66/",
+    "extra_urls": [],
+    "require": [],
+    "icon": "icon.png",
+    "composer_autoload": "vendor/composer"
+}
