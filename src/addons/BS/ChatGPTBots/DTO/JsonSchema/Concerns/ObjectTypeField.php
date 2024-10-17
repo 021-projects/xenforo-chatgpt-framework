@@ -21,7 +21,7 @@ trait ObjectTypeField
         $obj = $this->defaultObject();
 
         $properties = array_map(
-            static fn(Field $field, string $key) => $field->toObject(),
+            static fn(Field $field) => $field->toObject(),
             $this->properties,
         );
         $obj->properties = $properties;
