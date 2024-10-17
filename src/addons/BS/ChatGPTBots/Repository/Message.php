@@ -54,14 +54,14 @@ class Message extends Repository
         /** @var \XF\Entity\Post $post */
         foreach ($posts as $post) {
             $role = $assistant && $assistant->user_id === $post['user_id']
-                ? MessageRole::Assistant
-                : MessageRole::User;
+                ? MessageRole::ASSISTANT
+                : MessageRole::USER;
             $text = $post->message;
             $imageUrls = $addImages
                 ? $this->getImageUrlsFromAttachments($post->Attachments)
                 : [];
 
-            if ($role === MessageRole::Assistant
+            if ($role === MessageRole::ASSISTANT
                 && $removeQuotesFromAssistantMessages
             ) {
                 $text = $this->messageParser->removeQuotes($post['message']);
@@ -123,13 +123,13 @@ class Message extends Repository
 
         foreach ($messages as $message) {
             $role = $assistant && $assistant->user_id === $message->user_id
-                ? MessageRole::Assistant
-                : MessageRole::User;
+                ? MessageRole::ASSISTANT
+                : MessageRole::USER;
             $imageUrls = $addImages
                 ? $this->getImageUrlsFromAttachments($message->Attachments)
                 : [];
 
-            if ($role === MessageRole::Assistant
+            if ($role === MessageRole::ASSISTANT
                 && $removeQuotesFromAssistantMessages
             ) {
                 $message->message = $this->messageParser->removeQuotes($message->message);
@@ -179,8 +179,8 @@ class Message extends Repository
 
         foreach ($comments as $comment) {
             $role = $assistant && $assistant->user_id === $comment->user_id
-                ? MessageRole::Assistant
-                : MessageRole::User;
+                ? MessageRole::ASSISTANT
+                : MessageRole::USER;
             $imageUrls = $addImages
                 ? $this->getImageUrlsFromAttachments($comment->Attachments)
                 : [];

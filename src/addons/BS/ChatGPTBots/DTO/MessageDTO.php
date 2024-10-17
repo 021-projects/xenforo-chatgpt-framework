@@ -9,7 +9,7 @@ class MessageDTO
     public function __construct(
         public string $text = '',
         public array $imageUrls = [],
-        public MessageRole $role = MessageRole::User,
+        public MessageRole $role = MessageRole::USER,
     ) {}
 
     public function toObject(): \stdClass

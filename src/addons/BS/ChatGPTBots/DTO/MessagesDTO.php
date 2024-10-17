@@ -75,7 +75,7 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
     public function addFromText(
         string $text,
         array $imageUrls = [],
-        MessageRole $role = MessageRole::User,
+        MessageRole $role = MessageRole::USER,
         bool $splitQuotes = false,
         ?int $assistantUserId = null
     ): self {
@@ -93,11 +93,11 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
         $lastQuote = array_pop($quotes);
 
         foreach ($quotes as $quote) {
-            $this->add(new MessageDTO($quote['content'], role: MessageRole::Assistant));
+            $this->add(new MessageDTO($quote['content'], role: MessageRole::ASSISTANT));
             $this->add(new MessageDTO($quote['message']));
         }
 
-        $this->add(new MessageDTO($lastQuote['content'], role: MessageRole::Assistant));
+        $this->add(new MessageDTO($lastQuote['content'], role: MessageRole::ASSISTANT));
         $this->add(new MessageDTO($lastQuote['message'], $imageUrls));
 
         return $this;
