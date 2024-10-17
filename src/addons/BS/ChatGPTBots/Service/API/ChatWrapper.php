@@ -2,6 +2,7 @@
 
 namespace BS\ChatGPTBots\Service\API;
 
+use BS\ChatGPTBots\DTO\GPTResponse\ErrorDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\MessageDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\StreamChunkDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\ToolCallsDTO;
@@ -10,6 +11,7 @@ use BS\ChatGPTBots\Exception\Message\EmptyMessage;
 use BS\ChatGPTBots\Exception\Message\EmptyResponseException;
 use BS\ChatGPTBots\Exception\Message\NoContentException;
 use BS\ChatGPTBots\Exception\Message\ResponseException;
+use BS\ChatGPTBots\Exception\Message\ResponseError;
 use BS\ChatGPTBots\Exception\Message\WrongResponseTypeException;
 use Orhanerday\OpenAi\OpenAi;
 use XF\App;
@@ -85,6 +87,10 @@ class ChatWrapper extends AbstractService
                 $jsonResponses
             );
             $jsonResponses = array_filter($jsonResponses);
+
+            foreach ($jsonResponses as $json) {
+                $this->assertNoResponseError($json);
+            }
         }
 
         $getFirstDelta = static function (array $json): ?array {
@@ -154,6 +160,8 @@ class ChatWrapper extends AbstractService
     {
         $response = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
+        $this->assertNoResponseError($response);
+
         $firstMsg = $response['choices'][0]['message'] ?? null;
 
         if (! $firstMsg) {
@@ -173,6 +181,18 @@ class ChatWrapper extends AbstractService
             content: $firstMsg['content'] ?? null,
             toolCalls: $toolCallsDto
         );
+    }
+
+    protected function assertNoResponseError(array $response): void
+    {
+        if (! empty($error = $response['error'])) {
+            throw new ResponseError(new ErrorDTO(
+                type: $error['type'],
+                code: $error['code'],
+                message: $error['message'],
+                param: $error['param'] ?? null
+            ), json_encode($response));
+        }
     }
 
     protected function logResponseException(ResponseException $e): void
