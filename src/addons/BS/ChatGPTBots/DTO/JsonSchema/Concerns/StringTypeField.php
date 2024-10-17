@@ -22,20 +22,31 @@ trait StringTypeField
         return $obj;
     }
 
-    public function allowed(string $value): self
+    public function allowed(array|string ...$value): self
     {
         $this->assertType(Type::STRING);
 
-        $this->enum[] = $value;
+        if (count($value) === 1 && is_array($value[0])) {
+            $value = $value[0];
+        }
+
+        $this->enum = array_merge($this->enum, $value);
 
         return $this;
     }
 
-    public function notAllowed(string $value): self
+    public function notAllowed(array|string $value): self
     {
         $this->assertType(Type::STRING);
 
-        $this->enum = array_filter($this->enum, static fn($v) => $v !== $value);
+        if (count($value) === 1 && is_array($value[0])) {
+            $value = $value[0];
+        }
+
+        $this->enum = array_filter(
+            $this->enum,
+            static fn($v) => ! in_array($v, $value, true)
+        );
 
         return $this;
     }

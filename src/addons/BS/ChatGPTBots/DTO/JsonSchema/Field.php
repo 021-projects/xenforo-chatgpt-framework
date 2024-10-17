@@ -26,7 +26,48 @@ abstract class Field
     public function __construct(
         protected Type $type,
         public string $description = '',
-    ) {}
+        ?array $properties = null,
+        ?array $required = null,
+        // ?Field $items = null, for Array, but not implemented yet
+        ?array $enum = null,
+        ?int $minimum = null,
+        ?int $maximum = null,
+        int|bool|null $exclusiveMinimum = null,
+        int|bool|null $exclusiveMaximum = null,
+        ?int $multipleOf = null,
+    ) {
+        if ($properties !== null) {
+            $this->addProps($properties);
+        }
+
+        if ($required !== null) {
+            $this->required($required);
+        }
+
+        if ($enum !== null) {
+            $this->allowed($enum);
+        }
+
+        if ($minimum !== null) {
+            $this->min($minimum);
+        }
+
+        if ($maximum !== null) {
+            $this->max($maximum);
+        }
+
+        if ($exclusiveMinimum !== null) {
+            $this->exclusiveMin($exclusiveMinimum);
+        }
+
+        if ($exclusiveMaximum !== null) {
+            $this->exclusiveMax($exclusiveMaximum);
+        }
+
+        if ($multipleOf !== null) {
+            $this->multipleOf($multipleOf);
+        }
+    }
 
     public function toObject(): \stdClass
     {

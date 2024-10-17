@@ -33,6 +33,13 @@ trait ObjectTypeField
         return $obj;
     }
 
+    public function addProps(array $props): void
+    {
+        foreach ($props as $key => $field) {
+            $this->addProp($key, $field);
+        }
+    }
+
     public function addProp(
         string $key,
         Field $field,
@@ -42,6 +49,17 @@ trait ObjectTypeField
         $this->properties[$key] = $field;
 
         return $this;
+    }
+
+    public function removeProps(array|string ...$keys): void
+    {
+        if (count($keys) === 1 && is_array($keys[0])) {
+            $keys = $keys[0];
+        }
+
+        foreach ($keys as $key) {
+            $this->removeProp($key);
+        }
     }
 
     public function removeProp(string $key): self
