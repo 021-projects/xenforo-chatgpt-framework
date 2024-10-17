@@ -2,7 +2,7 @@
 
 namespace BS\ChatGPTBots\DTO\JsonSchema\Concerns;
 
-use BS\ChatGPTBots\DTO\Field;
+use BS\ChatGPTBots\DTO\JsonSchema\Field;
 use BS\ChatGPTBots\Enums\JsonSchema\Type;
 
 trait ObjectTypeField
@@ -53,7 +53,7 @@ trait ObjectTypeField
         return $this;
     }
 
-    public function required(array ...$keys): self
+    public function required(array|string ...$keys): self
     {
         $this->assertType(Type::OBJECT);
 
@@ -66,7 +66,7 @@ trait ObjectTypeField
         return $this;
     }
 
-    public function notRequired(array ...$keys): self
+    public function notRequired(array|string ...$keys): self
     {
         $this->assertType(Type::OBJECT);
 
@@ -74,7 +74,7 @@ trait ObjectTypeField
             $keys = $keys[0];
         }
 
-        $this->required = array_diff($this->required, $keys);
+        $this->_required = array_diff($this->_required, $keys);
 
         return $this;
     }

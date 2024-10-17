@@ -15,7 +15,7 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
 
     protected MessageParser $msgParser;
 
-    public function __construct(array ...$items)
+    public function __construct(array|MessageDTO ...$items)
     {
         if (count($items) === 1 && is_array($items[0])) {
             $items = $items[0];
