@@ -79,7 +79,7 @@ trait ObjectTypeField
             $keys = $keys[0];
         }
 
-        $this->_required[] = array_merge($this->_required, $keys);
+        $this->_required = array_merge($this->_required, $keys);
 
         return $this;
     }
