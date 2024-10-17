@@ -157,7 +157,7 @@ class ChatWrapper extends AbstractService
         $firstMsg = $response['choices'][0]['message'] ?? null;
 
         if (! $firstMsg) {
-            throw new EmptyMessage($response);
+            throw new EmptyMessage(json_encode($response));
         }
 
         $role = MessageRole::tryFrom($firstMsg['role']) ?? MessageRole::ASSISTANT;
