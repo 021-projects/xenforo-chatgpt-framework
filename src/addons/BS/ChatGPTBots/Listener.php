@@ -11,7 +11,7 @@ class Listener
     public static function appSetup(App $app)
     {
         $container = $app->container();
-        $container->set('chatGPT', function (Container $container) use ($app) {
+        $container->set('openAi:api', function (Container $container) use ($app) {
             $apiKey = $app->options()->bsChatGptApiKey;
             if (! $apiKey) {
                 return null;

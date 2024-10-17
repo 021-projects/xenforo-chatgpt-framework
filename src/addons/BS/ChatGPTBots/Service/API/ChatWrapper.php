@@ -31,7 +31,7 @@ class ChatWrapper extends AbstractService
     {
         parent::__construct($app);
 
-        $this->api = $api ?? $app->container('chatGPT');
+        $this->api = $api ?? $app->container('openAi:api');
     }
 
     /**
