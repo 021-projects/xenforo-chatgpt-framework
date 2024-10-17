@@ -16,7 +16,7 @@ class ToolDTO
         $this->validateObject();
 
         $obj = new \stdClass();
-        $obj->type = $this->type;
+        $obj->type = $this->type->value;
 
         if ($this->function) {
             $obj->function = $this->function->toObject();
