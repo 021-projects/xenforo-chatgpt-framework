@@ -185,7 +185,7 @@ class ChatWrapper extends AbstractService
 
     protected function assertNoResponseError(array $response): void
     {
-        if (! empty($error = $response['error'])) {
+        if (! empty($error = $response['error'] ?? null)) {
             throw new ResponseError(new ErrorDTO(
                 type: $error['type'],
                 code: $error['code'],
