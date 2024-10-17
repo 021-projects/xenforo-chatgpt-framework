@@ -9,7 +9,6 @@ use BS\ChatGPTBots\Enums\MessageRole;
 use BS\ChatGPTBots\Exception\Message\EmptyMessage;
 use BS\ChatGPTBots\Exception\Message\EmptyResponseException;
 use BS\ChatGPTBots\Exception\Message\NoContentException;
-use BS\ChatGPTBots\Exception\Message\FailedToGetReplyException;
 use BS\ChatGPTBots\Exception\Message\ResponseException;
 use BS\ChatGPTBots\Exception\Message\WrongResponseTypeException;
 use Orhanerday\OpenAi\OpenAi;
@@ -38,14 +37,14 @@ class ChatWrapper extends AbstractService
     /**
      * @param  array  $params
      * @param  callable  $output function(StreamChunkDTO $chunk): void
-     * @param  bool  $throwExceptions
+     * @param  bool  $ignoreExceptions
      * @return void
      * @throws \JsonException
      */
     public function streamMessage(
         array $params,
         callable $output,
-        bool $throwExceptions = false,
+        bool $ignoreExceptions = false,
     ): void {
         $params['stream'] = true;
 
@@ -60,7 +59,7 @@ class ChatWrapper extends AbstractService
             });
         } catch (\Exception $e) {
             \XF::logException($e, false, 'ChatGPT exception: ');
-            $throwExceptions && throw $e;
+            !$ignoreExceptions && throw $e;
         }
     }
 
@@ -109,10 +108,21 @@ class ChatWrapper extends AbstractService
         );
     }
 
+    /**
+     * @param  array  $params
+     * @param  bool  $mustHasContent If true, throws an exception if the message content is empty.
+     *
+     * @return \BS\ChatGPTBots\DTO\GPTResponse\MessageDTO
+     * @throws \BS\ChatGPTBots\Exception\Message\EmptyMessage
+     * @throws \BS\ChatGPTBots\Exception\Message\EmptyResponseException
+     * @throws \BS\ChatGPTBots\Exception\Message\NoContentException
+     * @throws \BS\ChatGPTBots\Exception\Message\ResponseException
+     * @throws \BS\ChatGPTBots\Exception\Message\WrongResponseTypeException
+     * @throws \JsonException
+     */
     public function getMessage(
         array $params,
-        bool $throwExceptions = false,
-        bool $throwIfNoContent = false,
+        bool $mustHasContent = true,
     ): MessageDTO {
         try {
             $response = $this->api->chat($params);
@@ -126,20 +136,18 @@ class ChatWrapper extends AbstractService
 
             $msg = $this->parseMessage($response);
 
-            if ($throwIfNoContent && ! $msg->content) {
+            if ($mustHasContent && ! $msg->content) {
                 throw new NoContentException($response);
             }
 
             return $msg;
         } catch (ResponseException $e) {
             $this->logResponseException($e);
-            $throwExceptions && throw $e;
+            throw $e;
         } catch (\Exception $e) {
             \XF::logException($e, false, 'ChatGPT exception: ');
-            $throwExceptions && throw $e;
+            throw $e;
         }
-
-        throw new FailedToGetReplyException;
     }
 
     protected function parseMessage(string $response): MessageDTO
