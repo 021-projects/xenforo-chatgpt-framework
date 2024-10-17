@@ -143,7 +143,7 @@ class ChatWrapper extends AbstractService
     {
         $response = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
-        $firstMsg = $response['choices'][0];
+        $firstMsg = $response['choices'][0]['message'];
 
         $role = MessageRole::tryFrom($firstMsg['role']) ?? MessageRole::ASSISTANT;
         $toolCallsDto = null;
