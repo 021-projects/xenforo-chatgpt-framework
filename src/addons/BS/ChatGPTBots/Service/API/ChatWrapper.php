@@ -6,6 +6,7 @@ use BS\ChatGPTBots\DTO\GPTResponse\MessageDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\StreamChunkDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\ToolCallsDTO;
 use BS\ChatGPTBots\Enums\MessageRole;
+use BS\ChatGPTBots\Exception\Message\EmptyMessage;
 use BS\ChatGPTBots\Exception\Message\EmptyResponseException;
 use BS\ChatGPTBots\Exception\Message\NoContentException;
 use BS\ChatGPTBots\Exception\Message\FailedToGetReplyException;
@@ -128,6 +129,8 @@ class ChatWrapper extends AbstractService
             if ($throwIfNoContent && ! $msg->content) {
                 throw new NoContentException($response);
             }
+
+            return $msg;
         } catch (ResponseException $e) {
             $this->logResponseException($e);
             $throwExceptions && throw $e;
@@ -143,7 +146,11 @@ class ChatWrapper extends AbstractService
     {
         $response = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
-        $firstMsg = $response['choices'][0]['message'];
+        $firstMsg = $response['choices'][0]['message'] ?? null;
+
+        if (! $firstMsg) {
+            throw new EmptyMessage($response);
+        }
 
         $role = MessageRole::tryFrom($firstMsg['role']) ?? MessageRole::ASSISTANT;
         $toolCallsDto = null;
