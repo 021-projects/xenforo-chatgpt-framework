@@ -9,7 +9,16 @@
     "faq_url": "",
     "support_url": "https://devsell.io/threads/021-chatgpt-bots.66/",
     "extra_urls": [],
-    "require": [],
+    "require": {
+        "XF": [
+            2020070,
+            "XenForo 2.2.0+"
+        ],
+        "php": [
+            "8.0.0",
+            "PHP 8.0.0+"
+        ]
+    },
     "icon": "icon.png",
     "composer_autoload": "vendor/composer"
 }
