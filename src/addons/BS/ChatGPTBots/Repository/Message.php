@@ -2,17 +2,28 @@
 
 namespace BS\ChatGPTBots\Repository;
 
+use BS\ChatGPTBots\DTO\MessagesDTO;
+use BS\ChatGPTBots\Enums\MessageRole;
+use BS\ChatGPTBots\Service\MessageParser;
 use XF\Entity\ConversationMaster;
 use XF\Entity\ConversationMessage;
 use XF\Entity\ProfilePost;
 use XF\Entity\ProfilePostComment;
 use XF\Entity\Thread;
 use XF\Entity\User;
+use XF\Mvc\Entity\AbstractCollection;
+use XF\Mvc\Entity\Manager;
 use XF\Mvc\Entity\Repository;
 
 class Message extends Repository
 {
-    use Concerns\MessageContent;
+    protected MessageParser $messageParser;
+
+    public function __construct(Manager $em, $identifier)
+    {
+        parent::__construct($em, $identifier);
+        $this->messageParser = \XF::service(MessageParser::class);
+    }
 
     public function fetchMessagesFromThread(
         Thread $thread,
@@ -20,9 +31,10 @@ class Message extends Repository
         ?User $assistant = null,
         bool $transformAssistantQuotesToMessages = true,
         int $startPosition = null,
-        bool $removeQuotesFromAssistantMessages = true
-    ) {
-        /** @var \XF\Finder\Post $finder */
+        bool $removeQuotesFromAssistantMessages = true,
+        bool $addImages = false,
+    ): MessagesDTO {
+        /** @var \XF\Finder\PostFinder|\XF\Finder\Post $finder */
         $finder = $this->finder('XF:Post');
         $posts = $finder
             ->inThread($thread, ['visibility' => 'visible']);
@@ -35,25 +47,33 @@ class Message extends Repository
             $posts->where('position', '<=', $stopPosition);
         }
 
-        $posts = $posts->orderByDate()
-            ->fetchColumns(['user_id', 'message']);
+        $posts = $posts->orderByDate()->fetch();
 
-        $messages = array_map(function ($post) use ($assistant, $removeQuotesFromAssistantMessages) {
-            if ($assistant) {
-                $role = $assistant->user_id === $post['user_id']
-                    ? 'assistant'
-                    : 'user';
-            } else {
-                $role = 'user';
-            }
-            if ($role === 'assistant' && $removeQuotesFromAssistantMessages) {
-                $post['message'] = $this->removeQuotes($post['message']);
-            }
-            return $this->wrapMessage($post['message'], $role);
-        }, $posts);
+        $messages = new MessagesDTO();
 
-        if ($assistant && $transformAssistantQuotesToMessages) {
-            $messages = $this->transformBotQuotesToMessages($messages, $assistant->user_id);
+        /** @var \XF\Entity\Post $post */
+        foreach ($posts as $post) {
+            $role = $assistant && $assistant->user_id === $post['user_id']
+                ? MessageRole::Assistant
+                : MessageRole::User;
+            $text = $post->message;
+            $imageUrls = $addImages
+                ? $this->getImageUrlsFromAttachments($post->Attachments)
+                : [];
+
+            if ($role === MessageRole::Assistant
+                && $removeQuotesFromAssistantMessages
+            ) {
+                $text = $this->messageParser->removeQuotes($post['message']);
+            }
+
+            $messages->addFromText(
+                $text,
+                $imageUrls,
+                role           : $role,
+                splitQuotes    : $transformAssistantQuotesToMessages,
+                assistantUserId: $assistant?->user_id
+            );
         }
 
         return $messages;
@@ -63,11 +83,13 @@ class Message extends Repository
      * @param  \XF\Entity\ConversationMaster  $conversation
      * @param  \XF\Entity\ConversationMessage|null  $beforeMessage
      * @param  \XF\Entity\User|null  $assistant
-     * @param  int|null  $limit  if negative, fetches messages starting from beforeMessage, if positive, fetches messages before beforeMessage
+     * @param  int  $limit  if negative, fetches messages starting from beforeMessage, if positive, fetches messages before beforeMessage
      * @param  bool  $reverseLoad
      * @param  bool  $transformAssistantQuotesToMessages
      * @param  bool  $removeQuotesFromAssistantMessages
-     * @return array|array[]
+     * @param  bool  $addImages
+     * @return \BS\ChatGPTBots\DTO\MessagesDTO
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function fetchMessagesFromConversation(
         ConversationMaster $conversation,
@@ -76,9 +98,10 @@ class Message extends Repository
         int $limit = 0,
         bool $reverseLoad = false,
         bool $transformAssistantQuotesToMessages = true,
-        bool $removeQuotesFromAssistantMessages = true
-    ) {
-        /** @var \XF\Finder\ConversationMessage $finder */
+        bool $removeQuotesFromAssistantMessages = true,
+        bool $addImages = false,
+    ): MessagesDTO {
+        /** @var \XF\Finder\ConversationMessageFinder|\XF\Finder\ConversationMessage $finder */
         $finder = $this->finder('XF:ConversationMessage');
 
         $messagesFinder = $finder->inConversation($conversation);
@@ -96,25 +119,32 @@ class Message extends Repository
             $messages = $messages->reverse();
         }
 
-        $messages = array_map(function ($convMessage) use ($assistant, $removeQuotesFromAssistantMessages) {
-            if ($assistant) {
-                $role = $assistant->user_id === $convMessage['user_id']
-                    ? 'assistant'
-                    : 'user';
-            } else {
-                $role = 'user';
-            }
-            if ($role === 'assistant' && $removeQuotesFromAssistantMessages) {
-                $convMessage['message'] = $this->removeQuotes($convMessage['message']);
-            }
-            return $this->wrapMessage($convMessage['message'], $role);
-        }, $messages->toArray());
+        $messagesDto = new MessagesDTO();
 
-        if ($assistant && $transformAssistantQuotesToMessages) {
-            $messages = $this->transformBotQuotesToMessages($messages, $assistant->user_id);
+        foreach ($messages as $message) {
+            $role = $assistant && $assistant->user_id === $message->user_id
+                ? MessageRole::Assistant
+                : MessageRole::User;
+            $imageUrls = $addImages
+                ? $this->getImageUrlsFromAttachments($message->Attachments)
+                : [];
+
+            if ($role === MessageRole::Assistant
+                && $removeQuotesFromAssistantMessages
+            ) {
+                $message->message = $this->messageParser->removeQuotes($message->message);
+            }
+
+            $messagesDto->addFromText(
+                $message->message,
+                $imageUrls,
+                role           : $role,
+                splitQuotes    : $transformAssistantQuotesToMessages,
+                assistantUserId: $assistant?->user_id
+            );
         }
 
-        return $messages;
+        return $messagesDto;
     }
 
     public function fetchCommentsFromProfilePost(
@@ -122,13 +152,18 @@ class Message extends Repository
         ?ProfilePostComment $beforeComment = null,
         ?User $assistant = null,
         int $limit = 0,
-        bool $reverseLoad = false
-    ) {
-        /** @var \XF\Finder\ProfilePostComment $commentsFinder */
+        bool $reverseLoad = false,
+        bool $addImages = false,
+    ): MessagesDTO {
+        /** @var \XF\Finder\ProfilePostCommentFinder|\XF\Finder\ProfilePostComment $commentsFinder */
         $commentsFinder = $this->finder('XF:ProfilePostComment');
 
         if ($beforeComment) {
-            $commentsFinder->where('comment_date', '<=', $beforeComment->comment_date);
+            $commentsFinder->where(
+                'comment_date',
+                '<=',
+                $beforeComment->comment_date
+            );
         }
 
         $comments = $commentsFinder->forProfilePost($profilePost)
@@ -140,121 +175,53 @@ class Message extends Repository
             $comments = $comments->reverse();
         }
 
-        return array_map(function ($comment) use ($assistant) {
-            if ($assistant) {
-                $role = $assistant->user_id === $comment['user_id']
-                    ? 'assistant'
-                    : 'user';
-            } else {
-                $role = 'user';
-            }
-            return $this->wrapMessage($comment['message'], $role);
-        }, $comments->toArray());
-    }
+        $messages = new MessagesDTO();
 
-    public function transformBotQuotesToMessages(array $messages, int $assistantUserId = null)
-    {
-        $output = [];
+        foreach ($comments as $comment) {
+            $role = $assistant && $assistant->user_id === $comment->user_id
+                ? MessageRole::Assistant
+                : MessageRole::User;
+            $imageUrls = $addImages
+                ? $this->getImageUrlsFromAttachments($comment->Attachments)
+                : [];
 
-        foreach ($messages as $message) {
-            $quotes = $this->getQuotes($message['content'], $assistantUserId);
-            if (empty($quotes)) {
-                $output[] = $message;
-            }
-
-            foreach ($quotes as $quote) {
-                $output[] = $this->wrapMessage($quote['content'], 'assistant');
-                $output[] = $this->wrapMessage($quote['message']);
-            }
-        }
-
-        return $output;
-    }
-
-    public function removeMessageDuplicates(array $messages): array
-    {
-        // to be sure that we have sequential array
-        $messages = array_values($messages);
-
-        $result = [];
-
-        foreach ($messages as $key => $message) {
-            if ($key === 0
-                || $message['content'] !== $messages[$key - 1]['content']
-            ) {
-                $result[] = $message;
-            }
-        }
-
-        return $result;
-    }
-
-    public function wrapMessage(string $content, string $role = 'user'): array
-    {
-        $content = $this->prepareContent($content);
-        return compact('role', 'content');
-    }
-
-    public function getQuotes(
-        string $text,
-        int $userId = null,
-        int $postId = null,
-        string $postType = 'post'
-    ): array {
-        $pattern = $this->getQuotesPattern($userId, $postId, $postType);
-        preg_match_all($pattern, $text, $matches);
-
-        $quotes = [];
-        foreach ($matches[0] as $match) {
-            $quotes[] = array_merge(
-                $this->parseQuote($match),
-                compact('match')
+            $messages->addFromText(
+                $comment->message,
+                $imageUrls,
+                role           : $role,
+                assistantUserId: $assistant?->user_id
             );
         }
-        return $quotes;
+
+        return $messages;
     }
 
-    public function parseQuote(string $text, string $postType = '[a-zA-Z_]*'): array
-    {
-        $pattern = '/\[quote="[^"]+,\s*'.$postType.':\s*(?<post_id>\d+),\s*member:\s*(?<user_id>\d+)"]\n?(?<content>.+?)\n?\[\/quote\]\n(?<message>(?:(?!\[quote).)*)/is';
-        preg_match($pattern, $text, $matches);
-        return [
-            'post_id' => isset($matches['post_id']) ? (int)$matches['post_id'] : null,
-            'user_id' => isset($matches['user_id']) ? (int)$matches['user_id'] : null,
-            'content' => isset($matches['content']) ? trim($matches['content']) : '',
-            'message' => isset($matches['message']) ? trim($matches['message']) : '',
-        ];
-    }
+    /**
+     * @param  \XF\Entity\Attachment[]  $attachments
+     * @return array
+     * @throws \League\Flysystem\FileNotFoundException
+     */
+    public function getImageUrlsFromAttachments(
+        AbstractCollection|array $attachments
+    ): array {
+        $fs = $this->app()->fs();
+        $base64 = static function ($abstractPath, $ext) use ($fs) {
+            $data = $fs->read($abstractPath);
+            return 'data:image/'.$ext.';base64,'.base64_encode($data);
+        };
 
-    public function removeQuotes(
-        string $text,
-        int $userId = null,
-        int $postId = null,
-        string $postType = 'post',
-        bool $withMessage = false
-    ): string {
-        $pattern = $this->getQuotesPattern($userId, $postId, $postType, $withMessage);
-        return trim((string)preg_replace($pattern, '', $text));
-    }
+        $imageUrls = [];
+        foreach ($attachments as $attachment) {
+            if ($attachment->type_grouping !== 'image') {
+                continue;
+            }
 
-    public function getQuotesPattern(
-        int $userId = null,
-        int $postId = null,
-        string $postType = 'post',
-        bool $withMessage = true
-    ): string {
-        // Quote example [QUOTE="Assistant, post: 666, member: 101"]
-        // Build 'post: 666' part of pattern
-        $patternPostPart = $postId ? "[^\"]+,\s*{$postType}:\s*{$postId}[,\"]" : '';
-        // Build 'member: 101' part of pattern
-        $patternMemberPart = $userId ? "[^\"]+,\s*member:\s*{$userId}[,\"]" : '';
-        // Build '="Assistant, post: 666, member: 101"' part of pattern
-        $patternInfoPart = $patternPostPart || $patternMemberPart
-            ? "=\"{$patternPostPart}{$patternMemberPart}"
-            : '.*?';
-        // Build message part of pattern
-        $messagePattern = $withMessage ? '\n[^\[]*(?:(?!\[quote).)*' : '';
-        // Build full pattern
-        return "/\[quote{$patternInfoPart}]\\n?(.+?)\\n?\[\/quote\]{$messagePattern}/is";
+            $imageUrls[] = $base64(
+                $attachment->Data->getExistingAbstractedDataPath(),
+                $attachment->extension
+            );
+        }
+
+        return $imageUrls;
     }
 }
