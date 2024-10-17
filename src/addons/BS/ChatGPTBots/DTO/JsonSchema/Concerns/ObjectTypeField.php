@@ -20,10 +20,10 @@ trait ObjectTypeField
     {
         $obj = $this->defaultObject();
 
-        $properties = array_map(
-            static fn(Field $field) => $field->toObject(),
-            $this->properties,
-        );
+        $properties = new \stdClass();
+        foreach ($this->properties as $key => $field) {
+            $properties->$key = $field->toObject();
+        }
         $obj->properties = $properties;
 
         if (! empty($this->_required)) {
