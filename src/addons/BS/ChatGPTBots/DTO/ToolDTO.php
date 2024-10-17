@@ -7,7 +7,7 @@ use BS\ChatGPTBots\Enums\ToolType;
 class ToolDTO
 {
     public function __construct(
-        public ToolType $type,
+        public ?ToolType $type = ToolType::FUNCTION,
         public ?FunctionDTO $function = null,
     ) {}
 
