@@ -6,15 +6,15 @@ use BS\ChatGPTBots\Enums\JsonSchema\Type;
 
 trait NumericTypeField
 {
-    protected int|float|null $minimum;
+    protected int|float|null $minimum = null;
 
-    protected int|float|null $maximum;
+    protected int|float|null $maximum = null;
 
-    protected int|float|bool|null $exclusiveMinimum;
+    protected int|float|bool|null $exclusiveMinimum = null;
 
-    protected int|float|bool|null $exclusiveMaximum;
+    protected int|float|bool|null $exclusiveMaximum = null;
 
-    protected int|float|null $_multipleOf;
+    protected int|float|null $_multipleOf = null;
 
     protected function numericObject(): \stdClass
     {
