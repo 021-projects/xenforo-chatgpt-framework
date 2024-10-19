@@ -24,15 +24,7 @@ class ToolCallsDTO
 
         $functions = [];
         foreach ($this->toolCalls as $toolCall) {
-            $functions[$toolCall['function']['name']] = new FunctionDTO(
-                $toolCall['function']['name'],
-                json_decode(
-                    $toolCall['function']['arguments'],
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                ),
-            );
+            $functions[$toolCall['function']['name']] = $this->decodeToolCall($toolCall);
         }
         return $this->decodedFunctions = $functions;
     }
@@ -48,15 +40,19 @@ class ToolCallsDTO
             return null;
         }
 
-        return $this->decodedFunctions[$name] = new FunctionDTO(
-            $toolCall['function']['name'],
-            json_decode(
-                $toolCall['function']['arguments'],
-                true,
-                512,
-                JSON_THROW_ON_ERROR
-            ),
+        return $this->decodedFunctions[$name] = $this->decodeToolCall($toolCall);
+    }
+
+    protected function decodeToolCall(array $toolCool): FunctionDTO
+    {
+        $name = $toolCool['function']['name'];
+        $arguments = json_decode(
+            $toolCool['function']['arguments'],
+            true,
+            512,
+            JSON_THROW_ON_ERROR
         );
+        return new FunctionDTO($name, $arguments);
     }
 
     protected function findToolCallForFunction(string $name): ?array
