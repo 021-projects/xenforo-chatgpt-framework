@@ -10,6 +10,10 @@ class ToolCallsDTO
     {
     }
 
+    /**
+     * @return array|FunctionDTO[]
+     * @throws \JsonException
+     */
     public function keyedFunctions(): array
     {
         if (! empty($this->decodedFunctions)
