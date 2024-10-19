@@ -76,29 +76,39 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
         string $text,
         array $imageUrls = [],
         MessageRole $role = MessageRole::USER,
+        string $name = '',
         bool $splitQuotes = false,
-        ?int $assistantUserId = null
+        ?int $assistantUserId = null,
+        string $assistantName = ''
     ): self {
         if (! $splitQuotes) {
-            $this->add(new MessageDTO($text, $imageUrls, $role));
+            $this->add(new MessageDTO($text, $imageUrls, $role, $name));
             return $this;
         }
 
         $quotes = $this->msgParser->getQuotes($text, $assistantUserId);
         if (empty($quotes)) {
-            $this->add(new MessageDTO($text, $imageUrls, $role));
+            $this->add(new MessageDTO($text, $imageUrls, $role, $name));
             return $this;
         }
 
         $lastQuote = array_pop($quotes);
 
         foreach ($quotes as $quote) {
-            $this->add(new MessageDTO($quote['content'], role: MessageRole::ASSISTANT));
-            $this->add(new MessageDTO($quote['message']));
+            $this->add(new MessageDTO(
+                $quote['content'],
+                role: MessageRole::ASSISTANT,
+                name: $assistantName
+            ));
+            $this->add(new MessageDTO($quote['message'], name: $name));
         }
 
-        $this->add(new MessageDTO($lastQuote['content'], role: MessageRole::ASSISTANT));
-        $this->add(new MessageDTO($lastQuote['message'], $imageUrls));
+        $this->add(new MessageDTO(
+            $lastQuote['content'],
+            role: MessageRole::ASSISTANT,
+            name: $assistantName
+        ));
+        $this->add(new MessageDTO($lastQuote['message'], $imageUrls, name: $name));
 
         return $this;
     }

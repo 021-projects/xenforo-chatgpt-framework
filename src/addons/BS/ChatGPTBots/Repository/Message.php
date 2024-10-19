@@ -70,9 +70,11 @@ class Message extends Repository
             $messages->addFromText(
                 $text,
                 $imageUrls,
-                role           : $role,
-                splitQuotes    : $transformAssistantQuotesToMessages,
-                assistantUserId: $assistant?->user_id
+                role: $role,
+                name: $post->username,
+                splitQuotes: $transformAssistantQuotesToMessages,
+                assistantUserId: $assistant?->user_id,
+                assistantName: $assistant?->username ?? ''
             );
         }
 
@@ -138,9 +140,11 @@ class Message extends Repository
             $messagesDto->addFromText(
                 $message->message,
                 $imageUrls,
-                role           : $role,
-                splitQuotes    : $transformAssistantQuotesToMessages,
-                assistantUserId: $assistant?->user_id
+                role: $role,
+                name: $message->username,
+                splitQuotes: $transformAssistantQuotesToMessages,
+                assistantUserId: $assistant?->user_id,
+                assistantName: $assistant?->username ?? ''
             );
         }
 
@@ -189,7 +193,9 @@ class Message extends Repository
                 $comment->message,
                 $imageUrls,
                 role           : $role,
-                assistantUserId: $assistant?->user_id
+                name           : $comment->username,
+                assistantUserId: $assistant?->user_id,
+                assistantName  : $assistant?->username ?? ''
             );
         }
 

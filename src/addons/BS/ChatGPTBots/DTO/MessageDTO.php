@@ -10,6 +10,7 @@ class MessageDTO
         public string $text = '',
         public array $imageUrls = [],
         public MessageRole $role = MessageRole::USER,
+        public string $name = '',
     ) {}
 
     public function toObject(): \stdClass
@@ -17,6 +18,10 @@ class MessageDTO
         $msg = new \stdClass();
         $msg->role = $this->role->value;
         $msg->content = [];
+
+        if ($this->name) {
+            $msg->name = $this->name;
+        }
 
         if ($this->text) {
             $msg->content[] = [
