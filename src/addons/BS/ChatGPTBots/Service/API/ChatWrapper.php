@@ -147,11 +147,13 @@ class ChatWrapper extends AbstractService
             }
 
             return $msg;
-        } catch (ResponseException $e) {
-            $this->logResponseException($e);
-            throw $e;
         } catch (\Exception $e) {
-            \XF::logException($e, false, 'ChatGPT exception: ');
+            if ($e instanceof ResponseException) {
+                $this->logResponseException($e);
+            } else {
+                \XF::logException($e, false, 'ChatGPT exception: ');
+            }
+
             throw $e;
         }
     }
