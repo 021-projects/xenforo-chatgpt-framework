@@ -189,8 +189,8 @@ class ChatWrapper extends AbstractService
     {
         if (! empty($error = $response['error'] ?? null)) {
             throw new ResponseError(new ErrorDTO(
-                type: $error['type'],
-                code: $error['code'],
+                type: $error['type'] ?? 'unknown',
+                code: $error['code'] ?? 'unknown',
                 message: $error['message'],
                 param: $error['param'] ?? null
             ), json_encode($response));
@@ -199,8 +199,8 @@ class ChatWrapper extends AbstractService
 
     protected function logResponseException(ResponseException $e): void
     {
-        $_POST['_chatGptResponse'] = $e->getResponse();
+        $_POST['chat_gpt_response'] = $e->getResponse();
         \XF::logException($e, false, 'ChatGPT response error: ');
-        unset($_POST['_chatGptResponse']);
+        unset($_POST['chat_gpt_response']);
     }
 }
