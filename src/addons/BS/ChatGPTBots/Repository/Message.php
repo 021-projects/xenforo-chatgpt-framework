@@ -57,7 +57,7 @@ class Message extends Repository
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
             $text = $post->message;
-            $imageUrls = $addImages
+            $imageUrls = $addImages && $role === MessageRole::USER
                 ? $this->getImageUrlsFromAttachments($post->Attachments)
                 : [];
 
@@ -125,7 +125,7 @@ class Message extends Repository
             $role = $assistant && $assistant->user_id === $message->user_id
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
-            $imageUrls = $addImages
+            $imageUrls = $addImages && $role === MessageRole::USER
                 ? $this->getImageUrlsFromAttachments($message->Attachments)
                 : [];
 
@@ -181,7 +181,7 @@ class Message extends Repository
             $role = $assistant && $assistant->user_id === $comment->user_id
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
-            $imageUrls = $addImages
+            $imageUrls = $addImages && $role === MessageRole::USER
                 ? $this->getImageUrlsFromAttachments($comment->Attachments)
                 : [];
 

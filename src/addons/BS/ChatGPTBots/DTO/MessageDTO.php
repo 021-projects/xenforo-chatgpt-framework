@@ -25,13 +25,16 @@ class MessageDTO
             ];
         }
 
-        foreach ($this->imageUrls as $imageUrl) {
-            $msg->content[] = [
-                'type' => 'image_url',
-                'image_url' => [
-                    'url' => $imageUrl,
-                ],
-            ];
+        // Only USER role allowed to send image_urls
+        if ($this->role === MessageRole::USER) {
+            foreach ($this->imageUrls as $imageUrl) {
+                $msg->content[] = [
+                    'type' => 'image_url',
+                    'image_url' => [
+                        'url' => $imageUrl,
+                    ],
+                ];
+            }
         }
 
         return $msg;
