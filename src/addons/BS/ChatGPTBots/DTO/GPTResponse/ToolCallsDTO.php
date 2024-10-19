@@ -7,7 +7,31 @@ class ToolCallsDTO
     protected array $decodedFunctions = [];
 
     public function __construct(protected array $toolCalls)
-    {}
+    {
+    }
+
+    public function keyedFunctions(): array
+    {
+        if (! empty($this->decodedFunctions)
+            && count($this->decodedFunctions) === count($this->toolCalls)
+        ) {
+            return $this->decodedFunctions;
+        }
+
+        $functions = [];
+        foreach ($this->toolCalls as $toolCall) {
+            $functions[$toolCall['function']['name']] = new FunctionDTO(
+                $toolCall['function']['name'],
+                json_decode(
+                    $toolCall['function']['arguments'],
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                ),
+            );
+        }
+        return $this->decodedFunctions = $functions;
+    }
 
     public function func(string $name): ?FunctionDTO
     {
