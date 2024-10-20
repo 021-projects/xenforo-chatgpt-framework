@@ -33,12 +33,12 @@ class MessageDTO
         // Only USER role allowed to send image_urls
         if ($this->role === MessageRole::USER) {
             foreach ($this->imageUrls as $imageUrl) {
-                $info = is_array($imageUrl) ? $imageUrl : [
-                    'url' => $imageUrl,
-                ];
+                $urlObj = new \stdClass();
+                $urlObj->url = is_string($imageUrl) ? $imageUrl : $imageUrl['url'];
+                $urlObj->detail = is_string($imageUrl) ? 'auto' : $imageUrl['detail'];
                 $msg->content[] = [
                     'type' => 'image_url',
-                    'image_url' => $info['url'],
+                    'image_url' => $urlObj,
                 ];
             }
         }

@@ -33,6 +33,7 @@ class Message extends Repository
         int $startPosition = null,
         bool $removeQuotesFromAssistantMessages = true,
         bool $addImages = false,
+        string $imagesResolution = 'auto',
     ): MessagesDTO {
         /** @var \XF\Finder\PostFinder|\XF\Finder\Post $finder */
         $finder = $this->finder('XF:Post');
@@ -58,7 +59,7 @@ class Message extends Repository
                 : MessageRole::USER;
             $text = $post->message;
             $imageUrls = $addImages && $role === MessageRole::USER
-                ? $this->getImageUrlsFromAttachments($post->Attachments)
+                ? $this->getImageUrlsFromAttachments($post->Attachments, $imagesResolution)
                 : [];
 
             if ($role === MessageRole::ASSISTANT
@@ -90,8 +91,8 @@ class Message extends Repository
      * @param  bool  $transformAssistantQuotesToMessages
      * @param  bool  $removeQuotesFromAssistantMessages
      * @param  bool  $addImages
+     * @param  string  $imagesResolution
      * @return \BS\ChatGPTBots\DTO\MessagesDTO
-     * @throws \League\Flysystem\FileNotFoundException
      */
     public function fetchMessagesFromConversation(
         ConversationMaster $conversation,
@@ -102,6 +103,7 @@ class Message extends Repository
         bool $transformAssistantQuotesToMessages = true,
         bool $removeQuotesFromAssistantMessages = true,
         bool $addImages = false,
+        string $imagesResolution = 'auto',
     ): MessagesDTO {
         /** @var \XF\Finder\ConversationMessageFinder|\XF\Finder\ConversationMessage $finder */
         $finder = $this->finder('XF:ConversationMessage');
@@ -128,7 +130,7 @@ class Message extends Repository
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
             $imageUrls = $addImages && $role === MessageRole::USER
-                ? $this->getImageUrlsFromAttachments($message->Attachments)
+                ? $this->getImageUrlsFromAttachments($message->Attachments, $imagesResolution)
                 : [];
 
             if ($role === MessageRole::ASSISTANT
@@ -158,6 +160,7 @@ class Message extends Repository
         int $limit = 0,
         bool $reverseLoad = false,
         bool $addImages = false,
+        string $imagesResolution = 'auto',
     ): MessagesDTO {
         /** @var \XF\Finder\ProfilePostCommentFinder|\XF\Finder\ProfilePostComment $commentsFinder */
         $commentsFinder = $this->finder('XF:ProfilePostComment');
@@ -186,7 +189,7 @@ class Message extends Repository
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
             $imageUrls = $addImages && $role === MessageRole::USER
-                ? $this->getImageUrlsFromAttachments($comment->Attachments)
+                ? $this->getImageUrlsFromAttachments($comment->Attachments, $imagesResolution)
                 : [];
 
             $messages->addFromText(
@@ -202,13 +205,24 @@ class Message extends Repository
         return $messages;
     }
 
+    public function mapImageUrlsWithResolution(
+        array $urls,
+        string $resolution
+    ): array {
+        return array_map(static fn(string $url) => [
+            'url' => $url,
+            'detail' => $resolution,
+        ], $urls);
+    }
+
     /**
      * @param  \XF\Entity\Attachment[]  $attachments
+     * @param  string|null  $resolution
      * @return array
-     * @throws \League\Flysystem\FileNotFoundException
      */
     public function getImageUrlsFromAttachments(
-        AbstractCollection|array $attachments
+        AbstractCollection|array $attachments,
+        ?string $resolution = null
     ): array {
         $fs = $this->app()->fs();
         $base64 = static function ($abstractPath, $ext) use ($fs) {
@@ -226,6 +240,10 @@ class Message extends Repository
                 $attachment->Data->getExistingAbstractedDataPath(),
                 $attachment->extension
             );
+        }
+
+        if ($resolution !== null) {
+            $imageUrls = $this->mapImageUrlsWithResolution($imageUrls, $resolution);
         }
 
         return $imageUrls;
