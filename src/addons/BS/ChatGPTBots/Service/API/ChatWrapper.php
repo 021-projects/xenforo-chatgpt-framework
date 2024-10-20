@@ -100,17 +100,35 @@ class ChatWrapper extends AbstractService
         $firstDelta = $getFirstDelta($jsonResponses[0]);
         $role = MessageRole::tryFrom($firstDelta['role']);
 
-        $content = implode(
-            '',
-            array_map(
-                static fn($json) => $json['choices'][0]['delta']['content'] ?? '',
-                $jsonResponses
-            )
-        );
+        $content = '';
+        $toolCalls = new ToolCallsDTO([]);
+
+        foreach ($jsonResponses as $json) {
+            $delta = $getFirstDelta($json);
+            $content .= $delta['content'] ?? '';
+            if (! isset($delta['tool_calls'])) {
+                continue;
+            }
+
+            foreach ($delta['tool_calls'] as $call) {
+                $existingCall = $toolCalls->get($call['index']);
+                if (! $existingCall) {
+                    $toolCalls->add($call);
+                    continue;
+                }
+
+                $existingCall['function']['name'] .= $call['function']['name'];
+                $existingCall['function']['arguments'] .= $call['function']['arguments'];
+
+                $toolCalls->set($call['index'], $existingCall);
+            }
+        }
+
 
         return new StreamChunkDTO(
             role: $role,
-            content: $content
+            content: $content,
+            toolCalls: $toolCalls,
         );
     }
 

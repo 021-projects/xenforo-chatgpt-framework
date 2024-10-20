@@ -6,15 +6,62 @@ class ToolCallsDTO
 {
     protected array $decodedFunctions = [];
 
-    public function __construct(protected array $toolCalls)
+    public function __construct(protected array $toolCalls = [])
     {
     }
 
-    /**
-     * @return array|FunctionDTO[]
-     * @throws \JsonException
-     */
-    public function keyedFunctions(): array
+    public function isEmpty(): bool
+    {
+        return empty($this->toolCalls);
+    }
+
+    public function get(int $index): ?array
+    {
+        return $this->toolCalls[$index] ?? null;
+    }
+
+    public function has(int $index): bool
+    {
+        return isset($this->toolCalls[$index]);
+    }
+
+    public function set(int $index, array $value): void
+    {
+        $this->toolCalls[$index] = $value;
+    }
+
+    public function add(array $value): void
+    {
+        $this->toolCalls[] = $value;
+    }
+
+    public function raw(): array
+    {
+        return $this->toolCalls;
+    }
+
+    public function merge(ToolCallsDTO ...$calls): self
+    {
+        // recursive merge every column
+        foreach ($calls as $call) {
+            foreach ($call->raw() as $index => $value) {
+                $existingCall = $this->get($index);
+                if (! $existingCall) {
+                    $this->add($value);
+                    continue;
+                }
+
+                $existingCall['function']['name'] .= $value['function']['name'];
+                $existingCall['function']['arguments'] .= $value['function']['arguments'];
+
+                $this->set($index, $existingCall);
+            }
+        }
+
+        return $this;
+    }
+
+    public function decodedFunctions(): array
     {
         if (! empty($this->decodedFunctions)
             && count($this->decodedFunctions) === count($this->toolCalls)
@@ -24,7 +71,7 @@ class ToolCallsDTO
 
         $functions = [];
         foreach ($this->toolCalls as $toolCall) {
-            $functions[$toolCall['function']['name']] = $this->decodeToolCall($toolCall);
+            $functions[] = $this->decodeToolCall($toolCall);
         }
         return $this->decodedFunctions = $functions;
     }

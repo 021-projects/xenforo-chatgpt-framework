@@ -16,11 +16,14 @@ class StreamChunkDTO
     public function __construct(
         public readonly ?MessageRole $role = null,
         public readonly ?string $content = null,
+        public readonly ?ToolCallsDTO $toolCalls = null,
     ) {}
 
     public function isEmpty(): bool
     {
-        return null === $this->role && null === $this->content;
+        return null === $this->role
+            && null === $this->content
+            && ($this->toolCalls?->isEmpty() ?? true);
     }
 
     public function hasContent(): bool
