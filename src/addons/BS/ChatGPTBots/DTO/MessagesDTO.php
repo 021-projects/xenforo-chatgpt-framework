@@ -50,7 +50,7 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
     public function splice(
         int $offset,
         int $length = null,
-        array $replacement = []
+        ?MessageDTO $replacement = null
     ): self {
         $this->items = array_splice($this->items, $offset, $length, $replacement);
         return $this;
