@@ -40,7 +40,13 @@ class ToolCallsDTO
         return $this->toolCalls;
     }
 
-    public function merge(ToolCallsDTO ...$calls): self
+    public function merge(ToolCallsDTO $calls): self
+    {
+        $this->toolCalls = array_merge($this->toolCalls, $calls->raw());
+        return $this;
+    }
+
+    public function chunkMerge(ToolCallsDTO ...$calls): self
     {
         // recursive merge every column
         foreach ($calls as $call) {

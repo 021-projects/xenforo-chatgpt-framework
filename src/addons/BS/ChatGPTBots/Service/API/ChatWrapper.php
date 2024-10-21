@@ -21,6 +21,8 @@ class ChatWrapper extends AbstractService
 {
     protected OpenAi $api;
 
+    private const DONE_KEYWORD = '[DONE]';
+
     private const JSON_END = '}]}';
     /**
      * Using to split JSON responses from the stream API.
@@ -72,8 +74,13 @@ class ChatWrapper extends AbstractService
         if (is_string($response)) {
             $response = str_replace('data: ', '', $response);
             $jsonResponses = explode(self::STREAM_RESPONSE_DELIMITER, $response);
+            $jsonResponses = array_filter($jsonResponses);
             $jsonResponses = array_map(
                 static function ($json) {
+                    if (str_starts_with($json, self::DONE_KEYWORD)) {
+                        return null;
+                    }
+
                     if (substr($json, -3) !== self::JSON_END) {
                         $json .= self::JSON_END;
                     }
@@ -98,7 +105,9 @@ class ChatWrapper extends AbstractService
         };
 
         $firstDelta = $getFirstDelta($jsonResponses[0]);
-        $role = MessageRole::tryFrom($firstDelta['role']);
+        $role = isset($firstDelta['role'])
+            ? MessageRole::tryFrom($firstDelta['role'])
+            : MessageRole::ASSISTANT;
 
         $content = '';
         $toolCalls = new ToolCallsDTO([]);
@@ -117,19 +126,38 @@ class ChatWrapper extends AbstractService
                     continue;
                 }
 
-                $existingCall['function']['name'] .= $call['function']['name'];
-                $existingCall['function']['arguments'] .= $call['function']['arguments'];
+                $this->assertValidToolCall($existingCall);
+
+                $existingCall['function']['name'] .= $call['function']['name'] ?? '';
+                $existingCall['function']['arguments'] .= $call['function']['arguments'] ?? '';
 
                 $toolCalls->set($call['index'], $existingCall);
             }
         }
-
 
         return new StreamChunkDTO(
             role: $role,
             content: $content,
             toolCalls: $toolCalls,
         );
+    }
+
+    protected function assertValidToolCall(array &$toolCall): void
+    {
+        if (! isset($toolCall['function'])) {
+            $toolCall['function'] = [
+                'name' => '',
+                'arguments' => '',
+            ];
+        }
+
+        if (! isset($toolCall['function']['name'])) {
+            $toolCall['function']['name'] = '';
+        }
+
+        if (! isset($toolCall['function']['arguments'])) {
+            $toolCall['function']['arguments'] = '';
+        }
     }
 
     /**
