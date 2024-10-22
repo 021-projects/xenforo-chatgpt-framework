@@ -57,6 +57,19 @@ class ToolCallsDTO
                     continue;
                 }
 
+                if (! isset($existingCall['function'])) {
+                    $existingCall['function'] = $value['function'];
+                    $this->set($index, $existingCall);
+                    continue;
+                }
+
+                if (! isset($existingCall['function']['name'])) {
+                    $existingCall['function']['name'] = '';
+                }
+                if (! isset($existingCall['function']['arguments'])) {
+                    $existingCall['function']['arguments'] = '';
+                }
+
                 $existingCall['function']['name'] .= $value['function']['name'];
                 $existingCall['function']['arguments'] .= $value['function']['arguments'];
 
