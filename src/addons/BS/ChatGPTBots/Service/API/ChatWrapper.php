@@ -23,13 +23,17 @@ class ChatWrapper extends AbstractService
 
     private const DONE_KEYWORD = '[DONE]';
 
+    private const JSON_START = '{"id"';
     private const JSON_END = '}]}';
+
     /**
      * Using to split JSON responses from the stream API.
      *
      * @var string
      */
-    private const STREAM_RESPONSE_DELIMITER = self::JSON_END."\n\n";
+    private const STREAM_RESPONSE_DELIMITER = "\n\n";
+
+    protected string $lastIncompleteJson = '';
 
     public function __construct(App $app, ?OpenAi $api = null)
     {
@@ -76,28 +80,44 @@ class ChatWrapper extends AbstractService
             $jsonResponses = explode(self::STREAM_RESPONSE_DELIMITER, $response);
             $jsonResponses = array_filter($jsonResponses);
             $jsonResponses = array_map(
-                static function ($json) {
+                function ($json) {
                     if (str_starts_with($json, self::DONE_KEYWORD)) {
                         return null;
                     }
 
-                    if (substr($json, -3) !== self::JSON_END) {
-                        $json .= self::JSON_END;
+                    if (! str_starts_with($json, self::JSON_START)) {
+                        $json = $this->lastIncompleteJson.$json;
+                        $this->lastIncompleteJson = '';
                     }
-                    return @json_decode(
-                        $json,
-                        true,
-                        512,
-                        JSON_THROW_ON_ERROR
-                    );
+
+                    if (substr($json, -3) !== self::JSON_END) {
+                        $this->lastIncompleteJson = $json;
+                        return null;
+                    }
+
+                    try {
+                        return json_decode(
+                            $json,
+                            true,
+                            512,
+                            JSON_THROW_ON_ERROR
+                        );
+                    } catch (\JsonException $e) {
+                        \XF::logException($e, false, 'ChatGPT Stream JSON parse error: ');
+                        return null;
+                    }
                 },
                 $jsonResponses
             );
-            $jsonResponses = array_filter($jsonResponses);
+            $jsonResponses = array_values(array_filter($jsonResponses));
 
             foreach ($jsonResponses as $json) {
                 $this->assertNoResponseError($json);
             }
+        }
+
+        if (empty($jsonResponses)) {
+            return new StreamChunkDTO();
         }
 
         $getFirstDelta = static function (array $json): ?array {
