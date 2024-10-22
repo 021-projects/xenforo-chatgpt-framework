@@ -96,6 +96,16 @@ class ToolCallsDTO
         return $this->decodedFunctions[$name] = $this->decodeToolCall($toolCall);
     }
 
+    public function hasFunc($name): bool
+    {
+        if (isset($this->decodedFunctions[$name])) {
+            return true;
+        }
+
+        $toolCall = $this->findToolCallForFunction($name);
+        return $toolCall !== null;
+    }
+
     protected function decodeToolCall(array $toolCool): FunctionDTO
     {
         $name = $toolCool['function']['name'];
@@ -111,7 +121,8 @@ class ToolCallsDTO
     protected function findToolCallForFunction(string $name): ?array
     {
         foreach ($this->toolCalls as $toolCall) {
-            if ($toolCall['function']['name'] === $name) {
+            $fnName = $toolCall['function']['name'] ?? null;
+            if ($fnName === $name) {
                 return $toolCall;
             }
         }
