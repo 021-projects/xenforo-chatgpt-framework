@@ -10,8 +10,8 @@ class Setup extends AbstractSetup
 
     public function checkRequirements(&$errors = [], &$warnings = [])
     {
-        $addOn = $this->app->addOnManager()->getById(self::OLD_ID);
-        if ($addOn) {
+        $installedAddons = $this->app->addOnManager()->getInstalledAddOns();
+        if (isset($installedAddons[self::OLD_ID])) {
             $errors[] = $this->oldAddOnUninstallError();
         }
     }
