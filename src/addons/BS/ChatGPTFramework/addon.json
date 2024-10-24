@@ -1,0 +1,24 @@
+{
+    "legacy_addon_id": "",
+    "title": "[021] ChatGPT Framework",
+    "description": "Framework for ChatGPT API.",
+    "version_id": 2000052,
+    "version_string": "2.0.0 Release Candidate 2",
+    "dev": "021",
+    "dev_url": "https://devsell.io/",
+    "faq_url": "",
+    "support_url": "https://devsell.io/threads/chatgpt-framework.66/",
+    "extra_urls": [],
+    "require": {
+        "XF": [
+            2020070,
+            "XenForo 2.2.0+"
+        ],
+        "php": [
+            "8.1.0",
+            "PHP 8.1.0+"
+        ]
+    },
+    "icon": "icon.png",
+    "composer_autoload": "vendor/composer"
+}
