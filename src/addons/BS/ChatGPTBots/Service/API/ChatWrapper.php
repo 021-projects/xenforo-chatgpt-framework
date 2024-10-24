@@ -14,6 +14,8 @@ use BS\ChatGPTBots\Exception\Message\NoContentException;
 use BS\ChatGPTBots\Exception\Message\ResponseException;
 use BS\ChatGPTBots\Exception\Message\ResponseError;
 use BS\ChatGPTBots\Exception\Message\WrongResponseTypeException;
+use BS\ChatGPTBots\Exception\StreamChunkException;
+use BS\ChatGPTBots\Exception\StreamChunkInvalidJsonException;
 use Orhanerday\OpenAi\OpenAi;
 use XF\App;
 use XF\Service\AbstractService;
@@ -59,7 +61,13 @@ class ChatWrapper extends AbstractService
 
         try {
             $this->api->chat($params, function ($curlInfo, $response) use ($output) {
-                $chunk = $this->parseStreamChunk($response);
+                try {
+                    $chunk = $this->parseStreamChunk($response);
+                } catch (StreamChunkException $e) {
+                    $this->logStreamChunkException($e);
+                    return 0;
+                }
+
                 if (! $chunk->isEmpty()) {
                     $output($chunk);
                 }
@@ -104,8 +112,7 @@ class ChatWrapper extends AbstractService
                             JSON_THROW_ON_ERROR
                         );
                     } catch (\JsonException $e) {
-                        \XF::logException($e, false, 'ChatGPT Stream JSON parse error: ');
-                        return null;
+                        throw new StreamChunkInvalidJsonException($json);
                     }
                 },
                 $jsonResponses
@@ -262,6 +269,13 @@ class ChatWrapper extends AbstractService
                 param: $error['param'] ?? null
             ), json_encode($response));
         }
+    }
+
+    protected function logStreamChunkException(StreamChunkException $e): void
+    {
+        $_POST['chat_gpt_stream_chunk'] = $e->chunk();
+        \XF::logException($e, false, 'ChatGPT stream chunk error: ');
+        unset($_POST['chat_gpt_stream_chunk']);
     }
 
     protected function logResponseException(ResponseException $e): void
