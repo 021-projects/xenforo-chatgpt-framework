@@ -2,6 +2,7 @@
 
 namespace BS\ChatGPTBots\Service\API;
 
+use BS\ChatGPTBots\Consts;
 use BS\ChatGPTBots\DTO\GPTResponse\ErrorDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\MessageDTO;
 use BS\ChatGPTBots\DTO\GPTResponse\StreamChunkDTO;
@@ -39,7 +40,7 @@ class ChatWrapper extends AbstractService
     {
         parent::__construct($app);
 
-        $this->api = $api ?? $app->container('openAi:api');
+        $this->api = $api ?? $app->container(Consts::API_CONTAINER_KEY);
     }
 
     /**
