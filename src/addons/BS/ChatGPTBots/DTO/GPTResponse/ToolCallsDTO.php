@@ -109,7 +109,7 @@ class ToolCallsDTO
         return $this->decodedFunctions[$name] = $this->decodeToolCall($toolCall);
     }
 
-    public function hasFunc($name): bool
+    public function hasFunc(string $name): bool
     {
         if (isset($this->decodedFunctions[$name])) {
             return true;
@@ -117,6 +117,18 @@ class ToolCallsDTO
 
         $toolCall = $this->findToolCallForFunction($name);
         return $toolCall !== null;
+    }
+
+    public function hasFuncStartsWith(string $name): bool
+    {
+        foreach ($this->toolCalls as $toolCall) {
+            $fnName = $toolCall['function']['name'] ?? '';
+            if (str_starts_with($fnName, $name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function decodeToolCall(array $toolCool): FunctionDTO
