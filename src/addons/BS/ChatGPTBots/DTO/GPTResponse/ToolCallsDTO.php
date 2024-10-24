@@ -70,8 +70,8 @@ class ToolCallsDTO
                     $existingCall['function']['arguments'] = '';
                 }
 
-                $existingCall['function']['name'] .= $value['function']['name'];
-                $existingCall['function']['arguments'] .= $value['function']['arguments'];
+                $existingCall['function']['name'] .= $value['function']['name'] ?? '';
+                $existingCall['function']['arguments'] .= $value['function']['arguments'] ?? '';
 
                 $this->set($index, $existingCall);
             }
