@@ -86,37 +86,40 @@ class ChatWrapper extends AbstractService
 
         if (is_string($response)) {
             $response = str_replace('data: ', '', $response);
-            $jsonResponses = explode(self::STREAM_RESPONSE_DELIMITER, $response);
-            $jsonResponses = array_filter($jsonResponses);
-            $jsonResponses = array_map(
-                function ($json) {
-                    if (str_starts_with($json, self::DONE_KEYWORD)) {
-                        return null;
-                    }
+            $dirtyJsons = explode(self::STREAM_RESPONSE_DELIMITER, $response);
+            $dirtyJsons = array_filter($dirtyJsons);
 
-                    if (! str_starts_with($json, self::JSON_START)) {
-                        $json = $this->lastIncompleteJson.$json;
-                        $this->lastIncompleteJson = '';
-                    }
+            foreach ($dirtyJsons as $dirtyJson) {
+                if (str_starts_with($dirtyJson, self::DONE_KEYWORD)) {
+                    continue;
+                }
 
-                    if (substr($json, -3) !== self::JSON_END) {
-                        $this->lastIncompleteJson = $json;
-                        return null;
-                    }
+                if (! str_starts_with($dirtyJson, self::JSON_START)) {
+                    $dirtyJson = $this->lastIncompleteJson.$dirtyJson;
+                    $this->lastIncompleteJson = '';
+                }
 
+                if (substr($dirtyJson, -3) !== self::JSON_END) {
+                    $this->lastIncompleteJson = $dirtyJson;
+                    continue;
+                }
+
+                // After merging the last incomplete JSON, we can have multiple JSONs in the same string.
+                $explodedJsons = explode(self::STREAM_RESPONSE_DELIMITER, $dirtyJson);
+                foreach ($explodedJsons as $explodedJson) {
                     try {
-                        return json_decode(
-                            $json,
+                        $jsonResponses[] = json_decode(
+                            $explodedJson,
                             true,
                             512,
                             JSON_THROW_ON_ERROR
                         );
                     } catch (\JsonException $e) {
-                        throw new StreamChunkInvalidJsonException($json);
+                        throw new StreamChunkInvalidJsonException($explodedJson);
                     }
-                },
-                $jsonResponses
-            );
+                }
+            }
+
             $jsonResponses = array_values(array_filter($jsonResponses));
 
             foreach ($jsonResponses as $json) {
