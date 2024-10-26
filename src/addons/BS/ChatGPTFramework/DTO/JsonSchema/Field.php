@@ -35,6 +35,8 @@ abstract class Field
         int|bool|null $exclusiveMinimum = null,
         int|bool|null $exclusiveMaximum = null,
         ?int $multipleOf = null,
+        ?int $minLength = null,
+        ?int $maxLength = null,
     ) {
         if ($properties !== null) {
             $this->addProps($properties);
@@ -66,6 +68,14 @@ abstract class Field
 
         if ($multipleOf !== null) {
             $this->multipleOf($multipleOf);
+        }
+
+        if ($minLength !== null) {
+            $this->minLength($minLength);
+        }
+
+        if ($maxLength !== null) {
+            $this->maxLength($maxLength);
         }
     }
 

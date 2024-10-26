@@ -6,6 +6,9 @@ use BS\ChatGPTFramework\Enums\JsonSchema\Type;
 
 trait StringTypeField
 {
+    protected ?int $_minLength = null;
+    protected ?int $_maxLength = null;
+
     /**
      * Enum values for string type
      *
@@ -18,6 +21,12 @@ trait StringTypeField
         $obj = $this->defaultObject();
         if (! empty($this->enum)) {
             $obj->enum = $this->enum;
+        }
+        if ($this->_minLength !== null) {
+            $obj->minLength = $this->_minLength;
+        }
+        if ($this->_maxLength !== null) {
+            $obj->maxLength = $this->_maxLength;
         }
         return $obj;
     }
@@ -48,6 +57,20 @@ trait StringTypeField
             static fn($v) => ! in_array($v, $value, true)
         );
 
+        return $this;
+    }
+
+    public function minLength(int $value): self
+    {
+        $this->assertType(Type::STRING);
+        $this->_minLength = $value;
+        return $this;
+    }
+
+    public function maxLength(int $value): self
+    {
+        $this->assertType(Type::STRING);
+        $this->_maxLength = $value;
         return $this;
     }
 }
