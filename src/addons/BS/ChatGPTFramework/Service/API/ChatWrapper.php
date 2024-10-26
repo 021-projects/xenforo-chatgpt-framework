@@ -2,13 +2,13 @@
 
 namespace BS\ChatGPTFramework\Service\API;
 
-use BS\ChatGPTAutoTitle\Exceptions\NoChatGPTApiException;
 use BS\ChatGPTFramework\Consts;
 use BS\ChatGPTFramework\DTO\GPTResponse\ErrorDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\MessageDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\StreamChunkDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\ToolCallsDTO;
 use BS\ChatGPTFramework\Enums\MessageRole;
+use BS\ChatGPTFramework\Exceptions\NoChatGPTApiException;
 use BS\ChatGPTFramework\Exceptions\Message\EmptyMessage;
 use BS\ChatGPTFramework\Exceptions\Message\EmptyResponseException;
 use BS\ChatGPTFramework\Exceptions\Message\NoContentException;
