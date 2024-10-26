@@ -1,6 +1,6 @@
 <?php
 
-namespace BS\ChatGPTFramework\Exception\Message;
+namespace BS\ChatGPTFramework\Exceptions\Message;
 
 use BS\ChatGPTFramework\DTO\GPTResponse\ErrorDTO;
 

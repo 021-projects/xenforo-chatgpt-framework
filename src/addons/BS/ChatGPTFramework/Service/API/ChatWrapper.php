@@ -2,20 +2,21 @@
 
 namespace BS\ChatGPTFramework\Service\API;
 
+use BS\ChatGPTAutoTitle\Exceptions\NoChatGPTApiException;
 use BS\ChatGPTFramework\Consts;
 use BS\ChatGPTFramework\DTO\GPTResponse\ErrorDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\MessageDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\StreamChunkDTO;
 use BS\ChatGPTFramework\DTO\GPTResponse\ToolCallsDTO;
 use BS\ChatGPTFramework\Enums\MessageRole;
-use BS\ChatGPTFramework\Exception\Message\EmptyMessage;
-use BS\ChatGPTFramework\Exception\Message\EmptyResponseException;
-use BS\ChatGPTFramework\Exception\Message\NoContentException;
-use BS\ChatGPTFramework\Exception\Message\ResponseException;
-use BS\ChatGPTFramework\Exception\Message\ResponseError;
-use BS\ChatGPTFramework\Exception\Message\WrongResponseTypeException;
-use BS\ChatGPTFramework\Exception\StreamChunkException;
-use BS\ChatGPTFramework\Exception\StreamChunkInvalidJsonException;
+use BS\ChatGPTFramework\Exceptions\Message\EmptyMessage;
+use BS\ChatGPTFramework\Exceptions\Message\EmptyResponseException;
+use BS\ChatGPTFramework\Exceptions\Message\NoContentException;
+use BS\ChatGPTFramework\Exceptions\Message\ResponseException;
+use BS\ChatGPTFramework\Exceptions\Message\ResponseError;
+use BS\ChatGPTFramework\Exceptions\Message\WrongResponseTypeException;
+use BS\ChatGPTFramework\Exceptions\StreamChunkException;
+use BS\ChatGPTFramework\Exceptions\StreamChunkInvalidJsonException;
 use Orhanerday\OpenAi\OpenAi;
 use XF\App;
 use XF\Service\AbstractService;
@@ -42,7 +43,12 @@ class ChatWrapper extends AbstractService
     {
         parent::__construct($app);
 
-        $this->api = $api ?? $app->container(Consts::API_CONTAINER_KEY);
+        $api ??= $app->container(Consts::API_CONTAINER_KEY);
+        if (! $api) {
+            throw new NoChatGPTApiException;
+        }
+
+        $this->api = $api;
     }
 
     /**
@@ -196,11 +202,11 @@ class ChatWrapper extends AbstractService
      * @param  bool  $mustHasContent If true, throws an exception if the message content is empty.
      *
      * @return \BS\ChatGPTFramework\DTO\GPTResponse\MessageDTO
-     * @throws \BS\ChatGPTFramework\Exception\Message\EmptyMessage
-     * @throws \BS\ChatGPTFramework\Exception\Message\EmptyResponseException
-     * @throws \BS\ChatGPTFramework\Exception\Message\NoContentException
-     * @throws \BS\ChatGPTFramework\Exception\Message\ResponseException
-     * @throws \BS\ChatGPTFramework\Exception\Message\WrongResponseTypeException
+     * @throws \BS\ChatGPTFramework\Exceptions\Message\EmptyMessage
+     * @throws \BS\ChatGPTFramework\Exceptions\Message\EmptyResponseException
+     * @throws \BS\ChatGPTFramework\Exceptions\Message\NoContentException
+     * @throws \BS\ChatGPTFramework\Exceptions\Message\ResponseException
+     * @throws \BS\ChatGPTFramework\Exceptions\Message\WrongResponseTypeException
      * @throws \JsonException
      */
     public function getMessage(

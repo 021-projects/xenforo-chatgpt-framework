@@ -1,6 +1,6 @@
 <?php
 
-namespace BS\ChatGPTFramework\Exception;
+namespace BS\ChatGPTFramework\Exceptions;
 
 class StreamChunkException extends \Exception
 {

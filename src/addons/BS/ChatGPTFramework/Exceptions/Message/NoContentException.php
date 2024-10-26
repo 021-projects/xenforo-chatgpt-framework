@@ -1,6 +1,6 @@
 <?php
 
-namespace BS\ChatGPTFramework\Exception\Message;
+namespace BS\ChatGPTFramework\Exceptions\Message;
 
 class NoContentException extends ResponseException
 {
