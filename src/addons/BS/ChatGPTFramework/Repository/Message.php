@@ -54,7 +54,7 @@ class Message extends Repository
 
         /** @var \XF\Entity\Post $post */
         foreach ($posts as $post) {
-            $role = $assistant && $assistant->user_id === $post['user_id']
+            $role = $assistant && $assistant->user_id === $post->user_id
                 ? MessageRole::ASSISTANT
                 : MessageRole::USER;
             $text = $post->message;
@@ -65,7 +65,7 @@ class Message extends Repository
             if ($role === MessageRole::ASSISTANT
                 && $removeQuotesFromAssistantMessages
             ) {
-                $text = $this->messageParser->removeQuotes($post['message']);
+                $text = $this->messageParser->removeQuotes($post->message);
             }
 
             $messages->addFromText(
