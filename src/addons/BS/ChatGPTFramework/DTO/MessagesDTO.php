@@ -81,7 +81,7 @@ class MessagesDTO implements \ArrayAccess, \IteratorAggregate, \Countable
         ?int $assistantUserId = null,
         string $assistantName = ''
     ): self {
-        if (! $splitQuotes) {
+        if (! $splitQuotes || ! $assistantUserId) {
             $this->add(new MessageDTO($text, $imageUrls, $role, $name));
             return $this;
         }
