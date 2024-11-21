@@ -19,8 +19,8 @@ class MessageDTO
         $msg->role = $this->role->value;
         $msg->content = [];
 
-        if ($this->name) {
-            $msg->name = $this->name;
+        if (! empty($sanitizedName = $this->sanitizedName())) {
+            $msg->name = $sanitizedName;
         }
 
         if ($this->text) {
@@ -54,6 +54,21 @@ class MessageDTO
     public function isNotEmpty(): bool
     {
         return ! $this->isEmpty();
+    }
+
+    /**
+     * Name must match ^[a-zA-Z0-9_-]+$ regex
+     *
+     * @return string
+     */
+    public function sanitizedName(): string
+    {
+        $name = preg_replace('/\s+/', '_', $this->name);
+        $name = utf8_romanize(utf8_deaccent($name));
+        if ($newName = @iconv('UTF-8', 'ASCII//TRANSLIT', $name)) {
+            $name = $newName;
+        }
+        return preg_replace('/[^a-zA-Z0-9_-]/', '', $name);
     }
 
     protected function cleanedText(): string
