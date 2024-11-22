@@ -2,9 +2,12 @@
 
 namespace BS\ChatGPTFramework\DTO\JsonSchema;
 
+use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\ArrayTypeField;
 use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\NumericTypeField;
 use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\ObjectTypeField;
 use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\StringTypeField;
+use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\Transformation;
+use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\Validation;
 use BS\ChatGPTFramework\Enums\JsonSchema\Type;
 
 /**
@@ -12,23 +15,23 @@ use BS\ChatGPTFramework\Enums\JsonSchema\Type;
  *
  * Represents a field in JSON schema
  *
- * TODO: Add support for all JSON schema properties (Missed: Array)
- *
  * @package BS\ChatGPTBots\DTO
  * @see https://json-schema.org/understanding-json-schema/reference
  */
-abstract class Field
+class Field
 {
+    use ArrayTypeField;
     use StringTypeField;
     use ObjectTypeField;
     use NumericTypeField;
+    use Validation;
+    use Transformation;
 
     public function __construct(
         protected Type $type,
         public string $description = '',
         ?array $properties = null,
         ?array $required = null,
-        // ?Field $items = null, for Array, but not implemented yet
         ?array $enum = null,
         ?int $minimum = null,
         ?int $maximum = null,
@@ -37,6 +40,15 @@ abstract class Field
         ?int $multipleOf = null,
         ?int $minLength = null,
         ?int $maxLength = null,
+        array|bool|null $prefixItems = null,
+        Field|bool|null $items = null,
+        ?Field $contains = null,
+        ?int $minContains = null,
+        ?int $maxContains = null,
+        ?int $minItems = null,
+        ?int $maxItems = null,
+        ?bool $uniqueItems = null,
+        ?callable $transform = null,
     ) {
         if ($properties !== null) {
             $this->addProps($properties);
@@ -77,16 +89,54 @@ abstract class Field
         if ($maxLength !== null) {
             $this->maxLength($maxLength);
         }
+
+        if ($prefixItems !== null) {
+            $this->prefixItems($prefixItems);
+        }
+
+        if ($items !== null) {
+            $this->items($items);
+        }
+
+        if ($contains !== null) {
+            $this->contains($contains);
+        }
+
+        if ($minContains !== null) {
+            $this->minContains($minContains);
+        }
+
+        if ($maxContains !== null) {
+            $this->maxContains($maxContains);
+        }
+
+        if ($minItems !== null) {
+            $this->minItems($minItems);
+        }
+
+        if ($maxItems !== null) {
+            $this->maxItems($maxItems);
+        }
+
+        if ($uniqueItems !== null) {
+            $this->uniqueItems($uniqueItems);
+        }
+
+        if ($transform !== null) {
+            $this->transform($transform);
+        }
     }
 
     public function toObject(): \stdClass
     {
-        return match ($this->type) {
+        $obj = match ($this->type) {
+            Type::ARRAY => $this->arrayObject(),
             Type::STRING => $this->stringObject(),
             Type::OBJECT => $this->objectObject(),
             Type::NUMBER, Type::INTEGER => $this->numericObject(),
             default => $this->defaultObject(),
         };
+        return $this->doTransformation($obj);
     }
 
     protected function defaultObject(): \stdClass
@@ -112,5 +162,10 @@ abstract class Field
     protected function filterArray(array $array): array
     {
         return array_filter($array, static fn($value) => ! empty($value));
+    }
+
+    protected function mapToObject(array $array): array
+    {
+        return array_map(static fn($value) => $value->toObject(), $array);
     }
 }
