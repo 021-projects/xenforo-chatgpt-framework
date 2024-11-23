@@ -1,5 +1,6 @@
 {
     "require": {
-        "orhanerday/open-ai": "^5.2"
+        "orhanerday/open-ai": "^5.2",
+        "021/json-schema": "^1.0"
     }
 }
