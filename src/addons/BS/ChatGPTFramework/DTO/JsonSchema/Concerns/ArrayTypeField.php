@@ -4,12 +4,13 @@ namespace BS\ChatGPTFramework\DTO\JsonSchema\Concerns;
 
 use BS\ChatGPTFramework\DTO\JsonSchema\Field;
 use BS\ChatGPTFramework\Enums\JsonSchema\Type;
+use O21\JsonSchema\Schema;
 
 trait ArrayTypeField
 {
     protected ?array $_prefixItems = null;
-    protected Field|bool|null $_items = null;
-    protected ?Field $_contains = null;
+    protected Field|Schema|bool|null $_items = null;
+    protected Field|Schema|null $_contains = null;
     protected ?int $_minContains = null;
     protected ?int $_maxContains = null;
     protected ?int $_minItems = null;
@@ -51,13 +52,13 @@ trait ArrayTypeField
     public function prefixItems(array $items): self
     {
         $this->assertType(Type::ARRAY);
-        $this->assertArrayItemsInstanceOf($items, Field::class);
+        $this->assertArrayItemsInstanceOf($items, [Field::class, Schema::class]);
 
         $this->_prefixItems = $items;
         return $this;
     }
 
-    public function items(Field|bool $items): self
+    public function items(Field|Schema|bool $items): self
     {
         $this->assertType(Type::ARRAY);
 
@@ -65,7 +66,7 @@ trait ArrayTypeField
         return $this;
     }
 
-    public function contains(Field $contains): self
+    public function contains(Field|Schema $contains): self
     {
         $this->assertType(Type::ARRAY);
 

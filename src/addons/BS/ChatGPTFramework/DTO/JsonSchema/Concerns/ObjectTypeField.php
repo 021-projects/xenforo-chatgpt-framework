@@ -4,6 +4,7 @@ namespace BS\ChatGPTFramework\DTO\JsonSchema\Concerns;
 
 use BS\ChatGPTFramework\DTO\JsonSchema\Field;
 use BS\ChatGPTFramework\Enums\JsonSchema\Type;
+use O21\JsonSchema\Schema;
 
 trait ObjectTypeField
 {
@@ -42,7 +43,7 @@ trait ObjectTypeField
 
     public function addProp(
         string $key,
-        Field $field,
+        Field|Schema $field,
     ): self {
         $this->assertType(Type::OBJECT);
 

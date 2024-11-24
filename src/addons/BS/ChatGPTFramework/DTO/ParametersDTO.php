@@ -11,6 +11,7 @@ use BS\ChatGPTFramework\DTO\JsonSchema\Field as JsonSchemaField;
  * Introduced for better readability.
  *
  * @package BS\ChatGPTBots\DTO
+ * @deprecated use \O21\JsonSchema\Schema instead
  */
 class ParametersDTO extends JsonSchemaField
 {}

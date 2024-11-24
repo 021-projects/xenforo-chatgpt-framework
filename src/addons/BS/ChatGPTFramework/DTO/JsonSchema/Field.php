@@ -9,6 +9,7 @@ use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\StringTypeField;
 use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\Transformation;
 use BS\ChatGPTFramework\DTO\JsonSchema\Concerns\Validation;
 use BS\ChatGPTFramework\Enums\JsonSchema\Type;
+use O21\JsonSchema\Schema;
 
 /**
  * Class JsonSchemaField
@@ -17,6 +18,7 @@ use BS\ChatGPTFramework\Enums\JsonSchema\Type;
  *
  * @package BS\ChatGPTBots\DTO
  * @see https://json-schema.org/understanding-json-schema/reference
+ * @deprecated use \O21\JsonSchema\Schema instead
  */
 class Field
 {
@@ -28,7 +30,7 @@ class Field
     use Transformation;
 
     public function __construct(
-        protected Type $type,
+        protected Type|\O21\JsonSchema\Enums\Type $type,
         public string $description = '',
         ?array $properties = null,
         ?array $required = null,
@@ -41,8 +43,8 @@ class Field
         ?int $minLength = null,
         ?int $maxLength = null,
         array|bool|null $prefixItems = null,
-        Field|bool|null $items = null,
-        ?Field $contains = null,
+        Field|Schema|bool|null $items = null,
+        Field|Schema|null $contains = null,
         ?int $minContains = null,
         ?int $maxContains = null,
         ?int $minItems = null,

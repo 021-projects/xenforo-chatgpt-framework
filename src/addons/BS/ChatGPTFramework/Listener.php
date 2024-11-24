@@ -2,6 +2,7 @@
 
 namespace BS\ChatGPTFramework;
 
+use BS\ChatGPTFramework\Enums\JsonSchema\Type;
 use Orhanerday\OpenAi\OpenAi;
 use XF\App;
 use XF\Container;
@@ -18,5 +19,7 @@ class Listener
             }
             return new OpenAi($apiKey);
         });
+
+        class_alias(Type::class, \O21\JsonSchema\Enums\Type::class);
     }
 }

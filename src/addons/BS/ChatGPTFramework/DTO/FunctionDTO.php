@@ -2,6 +2,8 @@
 
 namespace BS\ChatGPTFramework\DTO;
 
+use O21\JsonSchema\Schema;
+
 class FunctionDTO
 {
     protected string $_name;
@@ -9,7 +11,7 @@ class FunctionDTO
     public function __construct(
         string $name,
         public ?string $description = null,
-        public ?ParametersDTO $parameters = null,
+        public ParametersDTO|Schema|null $parameters = null,
         public ?bool $strict = null,
     ) {
         $this->name($name);
